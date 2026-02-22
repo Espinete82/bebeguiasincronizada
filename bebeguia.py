@@ -241,7 +241,9 @@ def add_log(log_type, dur_min=0, color=None, ts=None):
 
 def change_phase(new_phase):
     dur = elapsed_min()
-    if st.session_state.phaseStart and st.session_state.phase != "idle" and dur > 1:
+    # Registrar fase anterior siempre que haya un phaseStart válido y la fase no sea idle
+    # Usamos dur >= 0 para capturar incluso cambios rápidos durante pruebas
+    if st.session_state.phaseStart and st.session_state.phase not in ("idle",) and new_phase != st.session_state.phase:
         prev_phase = st.session_state.phase
         prev_start = st.session_state.phaseStart
         add_log(prev_phase, dur)
