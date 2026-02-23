@@ -40,7 +40,7 @@ def _serialize(state_dict):
 
 def _deserialize(data):
     """Convierte datos de Supabase al estado de la app."""
-    if not data:
+    if not data or not data.get('baby'):  # FIX: {} sin baby no es estado válido
         return None
     if data.get('baby', {}).get('birth'):
         data['baby']['birth'] = datetime.datetime.strptime(
@@ -106,7 +106,8 @@ if 'initialized' not in st.session_state:
         st.session_state.timer_paused    = db.get('timer_paused', False)
         st.session_state.paused_seconds  = db.get('paused_seconds', 0)
         st.session_state.pause_start     = db.get('pause_start')
-        st.session_state.page            = "main"
+        st.session_state.last_completed  = None  # FIX: siempre inicializar
+        st.session_state.page            = "main" if db.get('baby') else "setup"
     else:
         st.session_state.baby            = None
         st.session_state.logs            = []
@@ -129,7 +130,9 @@ def age_days():
     b = st.session_state.baby
     if not b or not b.get('birth'):
         return 0
-    return (datetime.date.today() - b['birth']).days
+    # FIX: usar fecha local, no UTC, para que el día no cambie a medianoche UTC
+    local_today = now_local().date()
+    return (local_today - b['birth']).days
 
 def age_weeks():
     return age_days() // 7
